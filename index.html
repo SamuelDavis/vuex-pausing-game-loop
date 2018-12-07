@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/vuex"></script>
     <script id="ui-template" type="text/x-template">
         <div id="ui">
-            <h3>Processing entity id {{$store.state.activeEntityIndex}}<small v-if="$store.state.waitingForUser">&nbsp;...Click anywhere to continue</small></h3> 
+            <h3>Processing entity {{$store.state.activeEntityIndex + 1}} / {{$store.state.entities.length}}<small v-if="$store.state.waitingForUser">&nbsp;...Click anywhere to continue</small></h3> 
             <pre>{{$store.state}}</pre>
         </div>
     </script>
@@ -29,7 +29,7 @@
                     SPAWN(state, data = {}) {
                         state.entities.push({
                             ...data,
-                            id: state.entities.length
+                            id: state.entities.length + 1
                         })
                     },
                     NEXT_ENTITY(state) {
