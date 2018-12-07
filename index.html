@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/vuex"></script>
     <script id="ui-template" type="text/x-template">
         <div id="ui">
-            <h3>Processing entity id {{$store.state.activeEntityIndex}}<small v-if="$store.state.waitingForUser">&nbsp;...Press any key to continue</small></h3> 
+            <h3>Processing entity id {{$store.state.activeEntityIndex}}<small v-if="$store.state.waitingForUser">&nbsp;...Click anywhere continue</small></h3> 
             <pre>{{$store.state}}</pre>
         </div>
     </script>
@@ -53,7 +53,7 @@
                 awaitUserInput(store) {
                     return new Promise((resolve) => {
                         store.commit(state.mutations.WAITING_FOR_USER.name, true)
-                        addEventListener("keydown", () => {
+                        addEventListener("click", () => {
                             store.commit(state.mutations.WAITING_FOR_USER.name, false)
                             resolve()
                         }, { once: true })
