@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Game Loop</title>
+</head>
+
+<body>
+    <div id="ui-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex"></script>
+    <script id="ui-template" type="text/x-template">
+        <div id="ui">
+            <h3>Processing entity id {{$store.state.activeEntityIndex}}<small v-if="$store.state.waitingForUser">&nbsp;...Press any key to continue</small></h3> 
+            <pre>{{$store.state}}</pre>
+        </div>
+    </script>
+    <script type="application/javascript">
+        document.addEventListener("DOMContentLoaded", (() => {
+            const state = {
+                state: {
+                    entities: [],
+                    activeEntityIndex: 0
+                },
+                mutations: {
+                    SPAWN(state, data = {}) {
+                        state.entities.push({
+                            ...data,
+                            id: state.entities.length
+                        })
+                    },
+                    NEXT_ENTITY(state) {
+                        state.activeEntityIndex = (state.activeEntityIndex + 1) % state.entities.length
+                    },
+                    WAITING_FOR_USER(state, isWaiting = true) {
+                        state.waitingForUser = isWaiting
+                    },
+                    MAKE_USER_CONTROLLED(state, id) {
+                        if (id in state.entities)
+                            state.entities[id].update = ai.awaitUserInput
+                    }
+                },
+                getters: {
+                    currentEntity(state) {
+                        return state.entities[state.activeEntityIndex]
+                    }
+                }
+            }
+            const ai = {
+                awaitUserInput(store) {
+                    return new Promise((resolve) => {
+                        store.commit(state.mutations.WAITING_FOR_USER.name, true)
+                        addEventListener("keydown", () => {
+                            store.commit(state.mutations.WAITING_FOR_USER.name, false)
+                            resolve()
+                        }, { once: true })
+                    })
+                },
+                default(store) {
+                    return new Promise((resolve) => {
+                        setTimeout(resolve, 1000)
+                    })
+                }
+            }
+            const engine = {
+                async update(store) {
+                    await store.getters.currentEntity.update(store)
+                    store.commit(state.mutations.NEXT_ENTITY.name)
+                    engine.update(store)
+                }
+            }
+            class UI extends Vue {
+                constructor(store) {
+                    super({
+                        el: "#ui-container",
+                        template: "#ui-template",
+                        store
+                    })
+                }
+            }
+            return () => {
+                const store = new Vuex.Store(state)
+                for (let n = 0; n < 3; n++)
+                    store.commit(state.mutations.SPAWN.name, { n, update: ai.default })
+                store.commit(state.mutations.MAKE_USER_CONTROLLED.name, 1)
+                engine.update(store)
+                new UI(store)
+            }
+        })())
+    </script>
+</body>
+
+</html>
